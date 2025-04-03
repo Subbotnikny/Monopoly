@@ -1,0 +1,128 @@
+<!DOCTYPE html><html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Монополия</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #board-container { display: flex; justify-content: center; margin-top: 10px; width: 90vw; }
+        #board { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 5px;
+            background-color: #ddd;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 90vw;
+            height: 80vw;
+        }
+        .cell { 
+            border: 2px solid black; 
+            height: 10vw; 
+            width: 10vw;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background-color: white; 
+            border-radius: 5px;
+            font-size: 3vw;
+            font-weight: bold;
+        }
+        .player { color: red; font-weight: bold; }
+        #controls { 
+            margin-top: 10px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 90vw;
+        }
+        button { 
+            background-color: #4CAF50; 
+            color: white; 
+            border: none; 
+            padding: 10px; 
+            cursor: pointer; 
+            font-size: 4vw;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 5px;
+        }
+        button:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>Монополия</h1>
+    <div id="board-container">
+        <div id="board"></div>
+    </div>
+    <div id="controls">
+        <p>Игрок <span id="currentPlayer">1</span> ходит</p>
+        <button onclick="rollDice()">Бросить кубик</button>
+        <p>Выпало: <span id="diceResult">0</span></p>
+        <p>Баланс: <span id="money">1500</span>$</p>
+    </div>
+    <script>
+        const numCells = 40;
+        const numPlayers = 4;
+        let players = Array.from({ length: numPlayers }, (_, i) => ({ position: 0, id: i + 1, money: 1500, properties: [] }));
+        let currentPlayer = 0;
+        const properties = {};
+        const chanceCards = [
+            "Получите 200$", "Заплатите 100$", "Продвиньтесь на 3 клетки вперёд", "Отправляйтесь на старт"
+        ];function createBoard() {
+        const board = document.getElementById('board');
+        for (let i = 0; i < numCells; i++) {
+            let cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.innerText = i;
+            cell.id = `cell-${i}`;
+            board.appendChild(cell);
+        }
+    }
+
+    function rollDice() {
+        const dice = Math.floor(Math.random() * 6) + 1;
+        document.getElementById('diceResult').innerText = dice;
+        movePlayer(dice);
+    }
+
+    function movePlayer(steps) {
+        let player = players[currentPlayer];
+        let oldCell = document.getElementById(`cell-${player.position}`);
+        if (oldCell) oldCell.innerText = player.position;
+        
+        player.position = (player.position + steps) % numCells;
+        let newCell = document.getElementById(`cell-${player.position}`);
+        newCell.innerHTML = `<span class='player'>Игрок ${player.id}</span>`;
+        
+        handleCellAction(player);
+        currentPlayer = (currentPlayer + 1) % numPlayers;
+        document.getElementById('currentPlayer').innerText = players[currentPlayer].id;
+    }
+    
+    function handleCellAction(player) {
+        let cell = player.position;
+        if (cell % 5 === 0) {
+            alert("Шанс! " + chanceCards[Math.floor(Math.random() * chanceCards.length)]);
+        } else if (!properties[cell]) {
+            if (confirm("Хотите купить клетку за 200$?")) {
+                player.money -= 200;
+                properties[cell] = player.id;
+                document.getElementById('money').innerText = player.money;
+            }
+        } else if (properties[cell] !== player.id) {
+            alert("Эта клетка уже куплена! Придётся заплатить 50$ владельцу.");
+            player.money -= 50;
+            players[properties[cell] - 1].money += 50;
+            document.getElementById('money').innerText = player.money;
+        }
+    }
+
+    createBoard();
+</script>
+
+</body>
+</html>
